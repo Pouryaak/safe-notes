@@ -7,6 +7,9 @@ import { NoteTypeToolbar } from "@/features/notes/components/NoteTypeToolbar";
 import { SearchInput } from "@/components/common/SearchInput";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { MobileNav } from "@/components/layout/mobile-nav";
+import { buildFolderTree } from "@/features/folders/utils";
+import { cn } from "@/lib/utils";
 
 // We need to fetch folder details too
 async function getFolder(id: string) {
@@ -29,6 +32,7 @@ export default async function FolderPage({
   const { id } = await params;
   const folder = await getFolder(id);
   const folders = await getFolders();
+  const folderTree = buildFolderTree(folders);
 
   if (!folder) {
     notFound();
@@ -44,9 +48,15 @@ export default async function FolderPage({
   return (
     <div className="flex h-full w-full">
       {/* Note List Column */}
-      <div className="w-80 border-r border-border flex flex-col bg-card h-full">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h1 className="font-semibold text-lg truncate pr-2 text-foreground">
+      <div
+        className={cn(
+          "w-full md:w-80 min-w-0 md:min-w-[20rem] md:max-w-[20rem] border-r border-border flex-col bg-card h-full shrink-0",
+          noteId ? "hidden md:flex" : "flex"
+        )}
+      >
+        <div className="p-4 border-b border-border flex items-center gap-2">
+          <MobileNav folderTree={folderTree} />
+          <h1 className="font-semibold text-lg truncate flex-1 text-foreground">
             {folder.name}
           </h1>
         </div>
@@ -60,7 +70,12 @@ export default async function FolderPage({
       </div>
 
       {/* Editor Column */}
-      <div className="flex-1 h-full bg-background overflow-hidden relative">
+      <div
+        className={cn(
+          "flex-1 h-full bg-background overflow-hidden relative",
+          noteId ? "flex" : "hidden md:flex"
+        )}
+      >
         <NoteEditor key={selectedNote?.id} note={selectedNote} />
       </div>
     </div>

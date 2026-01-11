@@ -31,6 +31,7 @@ export const viewport = {
 };
 
 import { VaultProvider } from "@/context/VaultContext";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export default function RootLayout({
   children,
@@ -42,12 +43,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex`}
       >
-        <VaultProvider>
-          <Sidebar />
-          <main className="flex-1 h-full overflow-hidden relative">
-            {children}
-          </main>
-        </VaultProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <VaultProvider>
+            <Sidebar />
+            <main className="flex-1 h-full overflow-hidden relative">
+              {children}
+            </main>
+          </VaultProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

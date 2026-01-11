@@ -21,6 +21,7 @@ import { CreateFolderDialog } from "@/features/folders/components/CreateFolderDi
 import { cn } from "@/lib/utils";
 import { useVault } from "@/context/VaultContext";
 import { VaultUnlockDialog } from "@/components/features/vault/VaultUnlockDialog";
+import { ModeToggle } from "@/components/mode-toggle";
 
 interface SidebarContentProps {
   folderTree: FolderNode[];
@@ -71,17 +72,20 @@ export function SidebarContent({ folderTree }: SidebarContentProps) {
           </Link>
         )}
 
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-muted-foreground hover:text-foreground transition-colors p-1"
-          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-        >
-          {isCollapsed ? (
-            <PanelLeftOpen size={18} />
-          ) : (
-            <PanelLeftClose size={18} />
-          )}
-        </button>
+        <div className="flex items-center gap-1">
+          <ModeToggle />
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1"
+            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen size={18} />
+            ) : (
+              <PanelLeftClose size={18} />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Vault Status Widget */}
@@ -90,8 +94,8 @@ export function SidebarContent({ folderTree }: SidebarContentProps) {
           className={cn(
             "rounded-lg text-sm flex flex-col gap-2 transition-colors border",
             isVaultLocked
-              ? "bg-orange-50 border-orange-100 text-orange-900"
-              : "bg-emerald-50 border-emerald-100 text-emerald-900",
+              ? "bg-orange-50 border-orange-100 text-orange-900 dark:bg-orange-950/30 dark:border-orange-900/50 dark:text-orange-200"
+              : "bg-emerald-50 border-emerald-100 text-emerald-900 dark:bg-emerald-950/30 dark:border-emerald-900/50 dark:text-emerald-200",
             isCollapsed ? "p-2 items-center" : "p-3"
           )}
         >
@@ -105,14 +109,14 @@ export function SidebarContent({ folderTree }: SidebarContentProps) {
               )}
               {isVaultLocked ? (
                 <VaultUnlockDialog>
-                  <button className="text-[10px] font-bold text-orange-700 hover:underline">
+                  <button className="text-[10px] font-bold text-orange-700 hover:underline dark:text-orange-300">
                     Unlock
                   </button>
                 </VaultUnlockDialog>
               ) : (
                 <button
                   onClick={() => lockVault()}
-                  className="text-[10px] font-bold text-emerald-700 hover:underline"
+                  className="text-[10px] font-bold text-emerald-700 hover:underline dark:text-emerald-300"
                 >
                   Lock
                 </button>
@@ -125,7 +129,9 @@ export function SidebarContent({ folderTree }: SidebarContentProps) {
                 <span
                   className={cn(
                     "font-medium",
-                    isVaultLocked ? "text-orange-700" : "text-emerald-700"
+                    isVaultLocked
+                      ? "text-orange-700 dark:text-orange-200"
+                      : "text-emerald-700 dark:text-emerald-200"
                   )}
                 >
                   {isVaultLocked ? "Vault Locked" : "Vault Unlocked"}
@@ -139,19 +145,14 @@ export function SidebarContent({ folderTree }: SidebarContentProps) {
 
               {isVaultLocked ? (
                 <VaultUnlockDialog>
-                  <button
-                    className="w-full text-center py-1 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded text-xs font-medium transition-colors"
-                    onClick={(e) => {
-                      // Optional
-                    }}
-                  >
+                  <button className="w-full text-center py-1 bg-orange-100 hover:bg-orange-200 text-orange-800 dark:bg-orange-900/40 dark:hover:bg-orange-900/60 dark:text-orange-200 rounded text-xs font-medium transition-colors">
                     Unlock Notes
                   </button>
                 </VaultUnlockDialog>
               ) : (
                 <button
                   onClick={() => lockVault()}
-                  className="w-full text-center py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded text-xs font-medium transition-colors"
+                  className="w-full text-center py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:hover:bg-emerald-900/60 dark:text-emerald-200 rounded text-xs font-medium transition-colors"
                 >
                   Lock Now
                 </button>

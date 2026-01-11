@@ -3,11 +3,12 @@ import { login, signup } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { message: string };
+  searchParams: Promise<{ message: string }>;
 }) {
+  const { message } = await searchParams;
   return (
     <div className="flex-1 w-full flex flex-col gap-20 items-center justify-center p-8 bg-background h-screen">
       <form className="animate-in flex-1 flex flex-col w-full justify-center gap-2 text-foreground max-w-sm">
@@ -40,9 +41,9 @@ export default function LoginPage({
           Sign Up
         </Button>
 
-        {searchParams?.message && (
+        {message && (
           <p className="mt-4 p-4 bg-foreground/10 text-foreground text-center">
-            {searchParams.message}
+            {message}
           </p>
         )}
       </form>

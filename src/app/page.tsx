@@ -10,6 +10,12 @@ import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/common/SearchInput";
 import { createClient } from "@/lib/supabase/server";
 
+import { Suspense } from "react";
+import { NoteEditorLoader } from "@/features/notes/components/NoteEditorLoader";
+import { NoteEditorSkeleton } from "@/features/notes/components/NoteEditorSkeleton";
+
+// ... existing imports ...
+
 export default async function HomePage({
   searchParams,
 }: {
@@ -21,10 +27,6 @@ export default async function HomePage({
   const folders = await getFolders();
   const folderTree = buildFolderTree(folders);
   const selectedNoteId = params.noteId;
-
-  const selectedNote = selectedNoteId
-    ? notes.find((n) => n.id === selectedNoteId) || null
-    : null;
 
   // Ensure auth
   const supabase = await createClient();
@@ -70,7 +72,13 @@ export default async function HomePage({
           selectedNoteId ? "flex" : "hidden md:flex"
         )}
       >
-        <NoteEditor key={selectedNote?.id} note={selectedNote} />
+        {selectedNoteId ? (
+          <Suspense fallback={<NoteEditorSkeleton />}>
+            <NoteEditorLoader noteId={selectedNoteId} />
+          </Suspense>
+        ) : (
+          <NoteEditor note={null} />
+        )}
       </div>
     </div>
   );

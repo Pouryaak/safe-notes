@@ -38,6 +38,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { deleteNotes } from "@/features/notes/actions";
 
 interface NoteListProps {
   notes: Note[];
@@ -50,6 +52,37 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
   const searchParams = useSearchParams();
   const { isVaultLocked } = useVault();
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelectionMode = () => {
+    setIsSelectionMode(!isSelectionMode);
+    setSelectedIds(new Set());
+  };
+
+  const toggleNoteSelection = (noteId: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(noteId)) {
+      newSelected.delete(noteId);
+    } else {
+      newSelected.add(noteId);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      await deleteNotes(Array.from(selectedIds));
+      setIsSelectionMode(false);
+      setSelectedIds(new Set());
+      router.refresh();
+      if (selectedNoteId && selectedIds.has(selectedNoteId)) {
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Failed to delete notes:", error);
+    }
+  };
 
   // Helper to render folder menu items recursively
   const renderFolderItems = (nodes: FolderNode[], noteId: string) => {
@@ -127,6 +160,45 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
 
   return (
     <div className="flex flex-col">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-background sticky top-0 z-10 min-h-[40px]">
+        <div className="text-xs font-medium text-muted-foreground">
+          {isSelectionMode
+            ? `${selectedIds.size} Selected`
+            : `${notes.length} Notes`}
+        </div>
+        <div className="flex items-center gap-2">
+          {isSelectionMode ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-destructive hover:text-destructive"
+                disabled={selectedIds.size === 0}
+                onClick={handleBulkDelete}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={toggleSelectionMode}
+              >
+                Done
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={toggleSelectionMode}
+            >
+              Select
+            </Button>
+          )}
+        </div>
+      </div>
       {notes.length === 0 && (
         <div className="text-center text-muted-foreground py-10">
           No notes here yet.
@@ -135,119 +207,144 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
       {notes.map((note) => (
         <div
           key={note.id}
-          onClick={() => handleNoteClick(note.id)}
+          onClick={() => {
+            if (isSelectionMode) {
+              toggleNoteSelection(note.id);
+            } else {
+              handleNoteClick(note.id);
+            }
+          }}
           className={cn(
-            "p-3 border-b border-border cursor-pointer hover:bg-muted/30 -mx-[1px] group",
+            "p-3 border-b border-border cursor-pointer hover:bg-muted/30 -mx-[1px] group transition-colors relative",
             selectedNoteId === note.id &&
-              "bg-primary/5 border-l-4 border-l-primary border-y-transparent border-r-transparent"
+              !isSelectionMode &&
+              "bg-primary/5 border-l-4 border-l-primary border-y-transparent border-r-transparent",
+            isSelectionMode && selectedIds.has(note.id) && "bg-muted"
           )}
         >
           <div className="flex items-start justify-between gap-2">
-            <div
-              className={cn(
-                "font-semibold truncate text-sm min-w-0 flex-1 max-w-[140px]",
-                selectedNoteId === note.id ? "text-primary" : "text-foreground"
-              )}
-            >
-              {note.title || "Untitled Note"}
-            </div>
-
-            {/* Metadata & Actions */}
-            <div className="flex items-center gap-1.5 shrink-0 text-muted-foreground/60 h-5">
-              {note.type !== "general" && (
-                <span
+            {isSelectionMode && (
+              <div className="pt-0.5 pr-2">
+                <Checkbox
+                  checked={selectedIds.has(note.id)}
+                  onCheckedChange={() => toggleNoteSelection(note.id)}
+                />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div
                   className={cn(
-                    "p-0.5 rounded bg-opacity-10 flex items-center justify-center",
-                    note.type === "secure" && "bg-orange-100",
-                    note.type === "todo" && "bg-blue-100",
-                    note.type === "reminder" && "bg-purple-100"
+                    "font-semibold truncate text-sm min-w-0 flex-1 max-w-[140px]",
+                    selectedNoteId === note.id
+                      ? "text-primary"
+                      : "text-foreground"
                   )}
-                  title={note.type.toUpperCase()}
                 >
-                  {getTypeIcon(note.type)}
-                </span>
-              )}
-              <span className="text-[10px] whitespace-nowrap">
-                {formatDistanceToNow(new Date(note.updated_at), {
-                  addSuffix: true,
-                })}
-              </span>
+                  {note.title || "Untitled Note"}
+                </div>
 
-              {/* 3-Dot Menu */}
-              <div onClick={(e) => e.stopPropagation()}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-5 w-5 p-0 hover:bg-background/80 text-muted-foreground"
+                {/* Metadata & Actions */}
+                <div className="flex items-center gap-1.5 shrink-0 text-muted-foreground/60 h-5">
+                  {note.type !== "general" && (
+                    <span
+                      className={cn(
+                        "p-0.5 rounded bg-opacity-10 flex items-center justify-center",
+                        note.type === "secure" && "bg-orange-100",
+                        note.type === "todo" && "bg-blue-100",
+                        note.type === "reminder" && "bg-purple-100"
+                      )}
+                      title={note.type.toUpperCase()}
                     >
-                      <MoreVertical size={12} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 text-left">
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        duplicateNote(note.id);
-                      }}
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      <span>Duplicate</span>
-                    </DropdownMenuItem>
+                      {getTypeIcon(note.type)}
+                    </span>
+                  )}
+                  <span className="text-xs whitespace-nowrap">
+                    {formatDistanceToNow(new Date(note.updated_at), {
+                      addSuffix: true,
+                    })}
+                  </span>
 
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <FolderInput className="mr-2 h-4 w-4" />
-                        <span>Move to</span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent className="w-48 max-h-[300px] overflow-y-auto">
+                  {/* 3-Dot Menu */}
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 p-0 hover:bg-background/80 text-muted-foreground"
+                        >
+                          <MoreVertical size={13} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-48 text-left"
+                      >
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation();
-                            moveNote(note.id, null);
+                            duplicateNote(note.id);
                           }}
                         >
-                          Inbox
+                          <Copy className="mr-2 h-4 w-4" />
+                          <span>Duplicate</span>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {renderFolderItems(
-                          buildFolderTree(folders || []),
-                          note.id
-                        )}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
 
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setNoteToDelete(note.id);
-                      }}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>Delete</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <FolderInput className="mr-2 h-4 w-4" />
+                            <span>Move to</span>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="w-48 max-h-[300px] overflow-y-auto">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                moveNote(note.id, null);
+                              }}
+                            >
+                              Inbox
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {renderFolderItems(
+                              buildFolderTree(folders || []),
+                              note.id
+                            )}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNoteToDelete(note.id);
+                          }}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Delete</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground truncate opacity-80 mt-1 h-4 w-full max-w-[280px]">
+                {note.type === "secure" && isVaultLocked ? (
+                  <span className="text-orange-600/70 flex items-center gap-1 font-medium italic">
+                    <Lock size={12} /> Content Encrypted
+                  </span>
+                ) : (
+                  note.content
+                    ?.replace(/<[^>]+>/g, " ") // Replace tags with space
+                    .replace(/&nbsp;/g, " ") // Replace &nbsp; with space
+                    .replace(/\s+/g, " ") // Collapse multiple spaces
+                    .trim()
+                    .slice(0, 60) || "No content"
+                )}
               </div>
             </div>
-          </div>
-
-          <div className="text-xs text-muted-foreground truncate opacity-80 mt-1 h-4 w-full max-w-[280px]">
-            {note.type === "secure" && isVaultLocked ? (
-              <span className="text-orange-600/70 flex items-center gap-1 font-medium italic">
-                <Lock size={10} /> Content Encrypted
-              </span>
-            ) : (
-              note.content
-                ?.replace(/<[^>]+>/g, " ") // Replace tags with space
-                .replace(/&nbsp;/g, " ") // Replace &nbsp; with space
-                .replace(/\s+/g, " ") // Collapse multiple spaces
-                .trim()
-                .slice(0, 60) || "No content"
-            )}
           </div>
         </div>
       ))}

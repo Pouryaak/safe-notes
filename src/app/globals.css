@@ -46,6 +46,7 @@
 }
 
 :root {
+  font-size: 22px;
   --radius: 0.625rem;
   --background: oklch(1 0 0); /* White */
   --foreground: oklch(0.208 0.042 265.755); /* Slate 900 */

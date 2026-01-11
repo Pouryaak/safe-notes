@@ -22,6 +22,12 @@ async function getFolder(id: string) {
   return data;
 }
 
+import { Suspense } from "react";
+import { NoteEditorLoader } from "@/features/notes/components/NoteEditorLoader";
+import { NoteEditorSkeleton } from "@/features/notes/components/NoteEditorSkeleton";
+
+// ... existing imports ...
+
 export default async function FolderPage({
   params,
   searchParams,
@@ -40,10 +46,6 @@ export default async function FolderPage({
 
   const notes = await getNotes(id);
   const { noteId } = await searchParams;
-
-  const selectedNote = noteId
-    ? notes.find((n) => n.id === noteId) || null
-    : null;
 
   return (
     <div className="flex h-full w-full">
@@ -76,7 +78,13 @@ export default async function FolderPage({
           noteId ? "flex" : "hidden md:flex"
         )}
       >
-        <NoteEditor key={selectedNote?.id} note={selectedNote} />
+        {noteId ? (
+          <Suspense fallback={<NoteEditorSkeleton />}>
+            <NoteEditorLoader noteId={noteId} />
+          </Suspense>
+        ) : (
+          <NoteEditor note={null} />
+        )}
       </div>
     </div>
   );

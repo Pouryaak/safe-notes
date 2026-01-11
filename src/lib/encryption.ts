@@ -30,7 +30,7 @@ export function decrypt(text: string): string {
   if (!text.includes(":")) return text;
 
   const [ivHex, authTagHex, encryptedHex] = text.split(":");
-  if (!ivHex || !authTagHex || !encryptedHex) return text;
+  if (!ivHex || !authTagHex || encryptedHex === undefined) return text;
 
   try {
     const decipher = createDecipheriv(

@@ -44,6 +44,26 @@ export async function getNotes(
   }));
 }
 
+export async function getNote(id: string): Promise<Note | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("notes")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching note:", error);
+    return null;
+  }
+
+  return {
+    ...data,
+    content:
+      data.type === "secure" ? decrypt(data.content || "") : data.content,
+  };
+}
+
 export async function duplicateNote(noteId: string) {
   const supabase = await createClient();
   const {
@@ -86,7 +106,8 @@ export async function moveNote(noteId: string, targetFolderId: string | null) {
 
 export async function createNote(
   folderId?: string,
-  type: "general" | "secure" | "todo" | "reminder" = "general"
+  type: "general" | "secure" | "todo" | "reminder" = "general",
+  id?: string
 ) {
   const supabase = await createClient();
   const {
@@ -100,6 +121,7 @@ export async function createNote(
   const { data, error } = await supabase
     .from("notes")
     .insert({
+      id: id, // Optional: use client-generated ID
       title: "Untitled Note",
       content: type === "secure" ? encrypt("") : "",
       folder_id: folderId || null,
@@ -159,6 +181,14 @@ export async function updateNote(id: string, updates: Partial<Note>) {
 export async function deleteNote(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("notes").delete().eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+}
+
+export async function deleteNotes(ids: string[]) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("notes").delete().in("id", ids);
 
   if (error) throw new Error(error.message);
   revalidatePath("/");

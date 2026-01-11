@@ -1,0 +1,5 @@
+{
+  "name": "Fortress Notes",
+  "description": "A secure, hierarchical note-taking application featuring nested folders, encrypted note types, auto-locking vault mechanisms, and AI-powered search capabilities.",
+  "requestFramePermissions": []
+}

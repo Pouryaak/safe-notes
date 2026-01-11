@@ -9,26 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Plus, Lock, Unlock, Search } from "lucide-react";
 import { CreateFolderDialog } from "@/features/folders/components/CreateFolderDialog";
 import { cn } from "@/lib/utils";
+import { useVault } from "@/context/VaultContext";
+import { VaultUnlockDialog } from "@/components/features/vault/VaultUnlockDialog";
 
 interface SidebarContentProps {
   folderTree: FolderNode[];
 }
 
 export function SidebarContent({ folderTree }: SidebarContentProps) {
-  const [isVaultLocked, setIsVaultLocked] = useState(true);
-  const [showPasswordInput, setShowPasswordInput] = useState(false);
-  const [password, setPassword] = useState("");
-
-  const handleUnlock = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === "1234") {
-      setIsVaultLocked(false);
-      setShowPasswordInput(false);
-      setPassword("");
-    } else {
-      alert("Incorrect password (Hint: 1234)");
-    }
-  };
+  const { isVaultLocked, lockVault } = useVault();
 
   return (
     <div className="w-64 bg-sidebar border-r border-sidebar-border h-full flex flex-col flex-shrink-0">
@@ -72,34 +61,19 @@ export function SidebarContent({ folderTree }: SidebarContentProps) {
           </div>
 
           {isVaultLocked ? (
-            !showPasswordInput ? (
+            <VaultUnlockDialog>
               <button
-                onClick={() => setShowPasswordInput(true)}
                 className="w-full text-center py-1 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded text-xs font-medium transition-colors"
+                onClick={(e) => {
+                  // Optional: e.preventDefault() if nested in link, but here it is fine.
+                }}
               >
                 Unlock Notes
               </button>
-            ) : (
-              <form onSubmit={handleUnlock} className="flex gap-1">
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Pin"
-                  className="w-full px-2 py-1 text-xs border border-orange-200 rounded focus:ring-1 focus:ring-orange-500 outline-none bg-white"
-                  autoFocus
-                />
-                <button
-                  type="submit"
-                  className="bg-orange-500 text-white px-2 rounded text-xs hover:bg-orange-600"
-                >
-                  →
-                </button>
-              </form>
-            )
+            </VaultUnlockDialog>
           ) : (
             <button
-              onClick={() => setIsVaultLocked(true)}
+              onClick={() => lockVault()}
               className="w-full text-center py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded text-xs font-medium transition-colors"
             >
               Lock Now

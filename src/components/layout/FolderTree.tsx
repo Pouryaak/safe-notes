@@ -10,9 +10,19 @@ import {
   Folder as FolderIcon,
   MoreVertical,
   Plus,
+  Trash2,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { DeleteFolderDialog } from "@/features/folders/components/DeleteFolderDialog";
 import {
   DndContext,
   DragOverlay,
@@ -109,19 +119,49 @@ function DraggableFolderItem({
         <FolderIcon className="h-4 w-4 mr-2 text-muted-foreground/70" />
         <span className="flex-1 truncate">{node.name}</span>
 
-        {/* Inline Create Folder Trigger */}
+        {/* Actions Menu */}
         <div
           onClick={(e) => e.stopPropagation()}
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
         >
+          {/* Inline Create Subfolder */}
           <CreateFolderDialog
             parentId={node.id}
             trigger={
               <button className="p-1 hover:bg-sidebar-accent-foreground/10 rounded text-muted-foreground hover:text-sidebar-foreground">
-                <Plus size={12} />
+                <Plus size={14} />
               </button>
             }
           />
+
+          {/* More Actions Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1 hover:bg-sidebar-accent-foreground/10 rounded text-muted-foreground hover:text-sidebar-foreground">
+                <MoreVertical size={14} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="right" className="w-48">
+              <DropdownMenuItem disabled>
+                <Pencil className="mr-2 h-4 w-4" />
+                <span>Rename</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DeleteFolderDialog
+                folderId={node.id}
+                folderName={node.name}
+                trigger={
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onSelect={(e) => e.preventDefault()} // Prevent closing dropdown immediately, handled by dialog
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Delete</span>
+                  </DropdownMenuItem>
+                }
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>

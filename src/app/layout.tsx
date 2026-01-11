@@ -30,6 +30,8 @@ export const viewport = {
   maximumScale: 1,
 };
 
+import { VaultProvider } from "@/context/VaultContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,10 +42,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex`}
       >
-        <Sidebar />
-        <main className="flex-1 h-full overflow-hidden relative">
-          {children}
-        </main>
+        <VaultProvider>
+          <Sidebar />
+          <main className="flex-1 h-full overflow-hidden relative">
+            {children}
+          </main>
+        </VaultProvider>
       </body>
     </html>
   );

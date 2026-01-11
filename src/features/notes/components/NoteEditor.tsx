@@ -7,14 +7,32 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useDebounce } from "@/hooks/useDebounce";
 import { format } from "date-fns";
-import { Clock, Trash2 } from "lucide-react";
+import { Clock, Trash2, Loader2, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useVault } from "@/context/VaultContext";
+import { VaultUnlockDialog } from "@/components/features/vault/VaultUnlockDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { deleteNote } from "@/features/notes/actions";
+import { useRouter } from "next/navigation";
 
 interface NoteEditorProps {
   note: Note | null;
 }
 
 export function NoteEditor({ note }: NoteEditorProps) {
+  const router = useRouter();
+  const { isVaultLocked, unlockVault } = useVault();
+  const [isDeleting, setIsDeleting] = useState(false);
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
 
@@ -66,6 +84,36 @@ export function NoteEditor({ note }: NoteEditorProps) {
     );
   }
 
+  // Secure Note Guard
+  if (note.type === "secure" && isVaultLocked) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-background h-full gap-4 text-center p-8">
+        <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mb-2">
+          <Lock className="w-8 h-8 text-orange-500" />
+        </div>
+        <h2 className="text-xl font-semibold text-foreground">Vault Locked</h2>
+        <p className="text-muted-foreground max-w-sm">
+          This note is secure. Please unlock your vault using the sidebar or the
+          button below to view its contents.
+        </p>
+
+        {/* Simple inline unlock for convenience? Or redirect to sidebar? 
+            Let's reuse the logic basically.
+        */}
+        {/* Dialog based unlock */}
+        <VaultUnlockDialog>
+          <Button
+            variant="outline"
+            className="mt-2 border-orange-200 hover:bg-orange-50 text-orange-700"
+          >
+            <Unlock className="w-4 h-4 mr-2" />
+            Unlock Vault
+          </Button>
+        </VaultUnlockDialog>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 h-full flex flex-col bg-background relative">
       {/* Sticky Header */}
@@ -86,13 +134,54 @@ export function NoteEditor({ note }: NoteEditorProps) {
 
         {/* Actions Placeholder (Delete, etc) */}
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="w-5 h-5" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive"
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-5 h-5" />
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Note?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete{" "}
+                  <span className="font-semibold">
+                    "{note.title || "Untitled"}"
+                  </span>
+                  ? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={async () => {
+                    if (!note) return;
+                    setIsDeleting(true);
+                    try {
+                      await deleteNote(note.id);
+                      router.replace("/"); // Go to inbox or root
+                      router.refresh();
+                    } catch (error) {
+                      console.error("Failed to delete note", error);
+                      setIsDeleting(false);
+                    }
+                  }}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 

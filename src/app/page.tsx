@@ -34,7 +34,7 @@ export default async function HomePage({
   return (
     <div className="flex h-full w-full">
       {/* Note List Column */}
-      <div className="w-80 border-r border-border flex flex-col bg-card h-full">
+      <div className="w-80 min-w-[20rem] max-w-[20rem] border-r border-border flex flex-col bg-card h-full shrink-0">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h1 className="font-semibold text-lg tracking-tight">Inbox</h1>
         </div>

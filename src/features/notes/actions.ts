@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Note } from "@/types/database";
 import { revalidatePath } from "next/cache";
+import { encrypt, decrypt } from "@/lib/encryption";
 
 export async function getNotes(
   folderId?: string,
@@ -43,7 +44,8 @@ export async function getNotes(
   // Mask secure content
   return data.map((note) => ({
     ...note,
-    content: note.type === "secure" ? "Locked" : note.content,
+    content:
+      note.type === "secure" ? decrypt(note.content || "") : note.content,
   }));
 }
 
@@ -64,7 +66,7 @@ export async function createNote(
     .from("notes")
     .insert({
       title: "Untitled Note",
-      content: "",
+      content: type === "secure" ? encrypt("") : "",
       folder_id: folderId || null,
       user_id: user.id,
       type: type,
@@ -77,25 +79,46 @@ export async function createNote(
   }
 
   revalidatePath(folderId ? `/folders/${folderId}` : "/");
+
+  // Return decrypted/clean content so the UI doesn't see ciphertext
+  if (data.type === "secure") {
+    return { ...data, content: "" };
+  }
+
   return data;
 }
 
 export async function updateNote(id: string, updates: Partial<Note>) {
   const supabase = await createClient();
+
+  // If updating content, we might need to encrypt it if the note is secure
+  let processedUpdates = { ...updates };
+
+  if (updates.content !== undefined) {
+    // We need to know if this note is secure.
+    // Optimization: Pass type in updates or fetch it. Fetches are safer.
+    const { data: currentNote } = await supabase
+      .from("notes")
+      .select("type")
+      .eq("id", id)
+      .single();
+
+    if (currentNote?.type === "secure" && updates.content) {
+      processedUpdates.content = encrypt(updates.content);
+    }
+  }
+
   const { error } = await supabase
     .from("notes")
     .update({
-      ...updates,
+      ...processedUpdates,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
 
   if (error) throw new Error(error.message);
 
-  // Optimistic update handling or revalidation needed?
-  // We revalidate path where note is visible
   revalidatePath("/");
-  // If we knew the folder...
 }
 
 export async function deleteNote(id: string) {

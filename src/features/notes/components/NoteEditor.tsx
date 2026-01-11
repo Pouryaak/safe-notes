@@ -116,36 +116,28 @@ export function NoteEditor({ note }: NoteEditorProps) {
 
   return (
     <div className="flex-1 h-full flex flex-col bg-background relative">
-      {/* Sticky Header */}
-      <div className="px-8 py-6 border-b border-border flex items-center justify-between bg-background/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <span className="p-2 bg-muted/50 rounded-lg">
-            <Clock className="w-5 h-5" />
+      {/* Sticky Header - Minimal */}
+      <div className="px-6 py-4 flex items-center justify-between sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex items-center gap-2 text-muted-foreground opacity-60 hover:opacity-100 transition-opacity">
+          <span className="text-xs font-medium">
+            {format(new Date(note.updated_at), "MMM d, h:mm a")}
           </span>
-          <div className="flex flex-col">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-              Last Edited
-            </span>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {format(new Date(note.updated_at), "MMMM d, yyyy 'at' h:mm a")}
-            </div>
-          </div>
         </div>
 
-        {/* Actions Placeholder (Delete, etc) */}
-        <div className="flex items-center gap-2">
+        {/* Actions */}
+        <div className="flex items-center gap-1">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground hover:text-destructive"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
                 disabled={isDeleting}
               >
                 {isDeleting ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 h-4" />
                 )}
               </Button>
             </AlertDialogTrigger>
@@ -169,7 +161,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
                     setIsDeleting(true);
                     try {
                       await deleteNote(note.id);
-                      router.replace("/"); // Go to inbox or root
+                      router.replace("/");
                       router.refresh();
                     } catch (error) {
                       console.error("Failed to delete note", error);
@@ -185,20 +177,21 @@ export function NoteEditor({ note }: NoteEditorProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-6">
-        <div className="max-w-3xl mx-auto">
-          <Input
-            className="w-full text-4xl font-bold text-foreground placeholder:text-muted-foreground/30 border-none shadow-none focus-visible:ring-0 px-0 h-auto bg-transparent mb-6"
+      <div className="flex-1 overflow-y-auto no-scrollbar">
+        <div className="max-w-3xl mx-auto px-8 pb-10">
+          <input
+            className="w-full text-4xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/40 mb-4 text-foreground"
             placeholder="Untitled Note"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          <Textarea
-            className="w-full h-[calc(100vh-300px)] resize-none border-none shadow-none focus-visible:ring-0 p-0 text-lg leading-relaxed font-sans text-foreground/80 placeholder:text-muted-foreground/40 bg-transparent"
+          <textarea
+            className="w-full h-[calc(100vh-200px)] resize-none bg-transparent border-none outline-none text-lg leading-relaxed text-foreground/90 placeholder:text-muted-foreground/40 font-sans"
             placeholder="Start typing..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            spellCheck={false}
           />
         </div>
       </div>

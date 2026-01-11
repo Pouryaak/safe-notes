@@ -3,7 +3,7 @@ import { getFolders } from "@/features/folders/actions";
 import { NoteList } from "@/features/notes/components/NoteList";
 import { NoteEditor } from "@/features/notes/components/NoteEditor";
 import { NoteTypeToolbar } from "@/features/notes/components/NoteTypeToolbar";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { SearchInput } from "@/components/common/SearchInput";
@@ -46,13 +46,13 @@ export default async function HomePage({
         <div className="p-2 border-b border-border bg-muted/10">
           <SearchInput />
         </div>
-        <ScrollArea className="flex-1">
+        <div className="flex-1 overflow-y-auto no-scrollbar">
           <NoteList
             notes={notes}
             selectedNoteId={selectedNoteId}
             folders={folders}
           />
-        </ScrollArea>
+        </div>
         <NoteTypeToolbar />
       </div>
 

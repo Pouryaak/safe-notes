@@ -3,7 +3,7 @@
 import React from "react";
 import { Note, Folder } from "@/types/database";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import {
   Lock,
@@ -36,6 +36,7 @@ interface NoteListProps {
 
 export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isVaultLocked } = useVault();
 
   // Helper to render folder menu items recursively
@@ -87,6 +88,12 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
     }
   };
 
+  const handleNoteClick = (noteId: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("noteId", noteId);
+    router.push(`?${params.toString()}`);
+  };
+
   return (
     <div className="flex flex-col">
       {notes.length === 0 && (
@@ -97,7 +104,7 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
       {notes.map((note) => (
         <div
           key={note.id}
-          onClick={() => router.push(`?noteId=${note.id}`)}
+          onClick={() => handleNoteClick(note.id)}
           className={cn(
             "p-3 border-b border-border cursor-pointer hover:bg-muted/30 -mx-[1px] group",
             // Removed overflow-hidden to help with popup positioning, ensuring children handle overflow

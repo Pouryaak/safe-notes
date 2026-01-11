@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { FolderTree } from "./FolderTree";
 import { FolderNode } from "@/features/folders/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +29,12 @@ interface SidebarContentProps {
 export function SidebarContent({ folderTree }: SidebarContentProps) {
   const { isVaultLocked, lockVault } = useVault();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const isInboxActive = pathname === "/" && !searchParams.get("view");
+  const isAllNotesActive =
+    pathname === "/" && searchParams.get("view") === "all";
 
   return (
     <div
@@ -160,14 +167,22 @@ export function SidebarContent({ folderTree }: SidebarContentProps) {
           <Link
             href="/"
             className={cn(
-              "flex items-center cursor-pointer rounded-md text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors font-medium",
+              "flex items-center cursor-pointer rounded-md text-sm transition-colors font-medium",
+              isInboxActive
+                ? "bg-sidebar-accent text-sidebar-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
               isCollapsed ? "justify-center py-2" : "px-2 py-1.5"
             )}
             title="Inbox"
           >
             <Inbox
               size={18}
-              className={cn("text-muted-foreground", !isCollapsed && "mr-2")}
+              className={cn(
+                isInboxActive
+                  ? "text-sidebar-foreground"
+                  : "text-muted-foreground",
+                !isCollapsed && "mr-2"
+              )}
             />
             {!isCollapsed && <span>Inbox</span>}
           </Link>
@@ -175,14 +190,22 @@ export function SidebarContent({ folderTree }: SidebarContentProps) {
           <Link
             href="/?view=all"
             className={cn(
-              "flex items-center cursor-pointer rounded-md text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors font-medium",
+              "flex items-center cursor-pointer rounded-md text-sm transition-colors font-medium",
+              isAllNotesActive
+                ? "bg-sidebar-accent text-sidebar-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
               isCollapsed ? "justify-center py-2" : "px-2 py-1.5"
             )}
             title="All Notes"
           >
             <Files
               size={18}
-              className={cn("text-muted-foreground", !isCollapsed && "mr-2")}
+              className={cn(
+                isAllNotesActive
+                  ? "text-sidebar-foreground"
+                  : "text-muted-foreground",
+                !isCollapsed && "mr-2"
+              )}
             />
             {!isCollapsed && <span>All Notes</span>}
           </Link>

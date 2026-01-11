@@ -3,7 +3,7 @@ import { getFolders } from "@/features/folders/actions";
 import { NoteList } from "@/features/notes/components/NoteList";
 import { NoteEditor } from "@/features/notes/components/NoteEditor";
 import { NoteTypeToolbar } from "@/features/notes/components/NoteTypeToolbar";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { SearchInput } from "@/components/common/SearchInput";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
@@ -53,9 +53,9 @@ export default async function FolderPage({
         <div className="p-2 border-b border-border bg-muted/10">
           <SearchInput />
         </div>
-        <ScrollArea className="flex-1">
+        <div className="flex-1 overflow-y-auto no-scrollbar">
           <NoteList notes={notes} selectedNoteId={noteId} folders={folders} />
-        </ScrollArea>
+        </div>
         <NoteTypeToolbar folderId={folder.id} />
       </div>
 

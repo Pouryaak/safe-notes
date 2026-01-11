@@ -47,13 +47,11 @@ export async function updatePin(oldPin: string, newPin: string) {
   const hashedPin = await hash(newPin, 10);
 
   // 3. Update DB
-  const { error } = await supabase
-    .from("profiles")
-    .upsert({
-      id: user.id,
-      vault_pin_hash: hashedPin,
-      updated_at: new Date().toISOString(),
-    });
+  const { error } = await supabase.from("profiles").upsert({
+    id: user.id,
+    vault_pin_hash: hashedPin,
+    updated_at: new Date().toISOString(),
+  });
 
   if (error) {
     throw new Error(error.message);
@@ -62,8 +60,13 @@ export async function updatePin(oldPin: string, newPin: string) {
   revalidatePath("/profile");
 }
 
+import { redirect } from "next/navigation";
+
+// ... existing imports ...
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath("/");
+  redirect("/login");
 }

@@ -6,5 +6,9 @@ export async function Sidebar() {
   const folders = await getFolders();
   const tree = buildFolderTree(folders);
 
-  return <SidebarContent folderTree={tree} />;
+  return (
+    <div className="hidden md:flex h-full">
+      <SidebarContent folderTree={tree} />
+    </div>
+  );
 }

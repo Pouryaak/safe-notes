@@ -1,29 +1,33 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { verifyPin } from "@/features/profile/actions";
 
 interface VaultContextType {
   isVaultLocked: boolean;
-  unlockVault: (pin: string) => boolean;
+  unlockVault: (pin: string) => Promise<boolean>;
   lockVault: () => void;
 }
 
 const VaultContext = createContext<VaultContextType | undefined>(undefined);
 
 export function VaultProvider({ children }: { children: React.ReactNode }) {
-  // Default to locked
   const [isVaultLocked, setIsVaultLocked] = useState(true);
 
-  // Auto-lock on inactivity could be added here
+  // Auto-lock could be added here
 
-  const unlockVault = (pin: string) => {
-    // In a real app, verify PIN with server or hash
-    // For now, hardcoded "123456" for testing
-    if (pin === "123456") {
-      setIsVaultLocked(false);
-      return true;
+  const unlockVault = async (pin: string) => {
+    try {
+      const isValid = await verifyPin(pin);
+      if (isValid) {
+        setIsVaultLocked(false);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Vault unlock failed:", error);
+      return false;
     }
-    return false;
   };
 
   const lockVault = () => {

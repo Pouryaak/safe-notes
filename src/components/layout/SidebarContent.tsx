@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useVault } from "@/context/VaultContext";
 import { VaultUnlockDialog } from "@/components/features/vault/VaultUnlockDialog";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface SidebarContentProps {
   folderTree: FolderNode[];
@@ -64,14 +65,27 @@ export function SidebarContent({ folderTree }: SidebarContentProps) {
         )}
       >
         {!isCollapsed && (
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-6 h-6 bg-primary rounded-md" />
-            <h1 className="font-bold text-sidebar-foreground text-lg tracking-tight">
-              Fortress
-            </h1>
+          <Link
+            href="/profile"
+            className="flex items-center gap-3 group px-2 py-1 rounded-md hover:bg-sidebar-accent transition-colors"
+          >
+            <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-transparent group-hover:ring-sidebar-ring transition-all">
+              <AvatarImage src="" />{" "}
+              {/* Add generic user image or user gravatar if available */}
+              <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                U
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-sidebar-foreground group-hover:text-sidebar-foreground">
+                My Profile
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                Manage Account
+              </span>
+            </div>
           </Link>
         )}
-
         <div className="flex items-center gap-1">
           <ModeToggle />
           <button

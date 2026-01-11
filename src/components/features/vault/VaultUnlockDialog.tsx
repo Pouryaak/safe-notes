@@ -40,9 +40,9 @@ export function VaultUnlockDialog({
   const show = isControlled ? open : internalOpen;
   const setShow = isControlled ? onOpenChange! : setInternalOpen;
 
-  const handleUnlock = (e: React.FormEvent) => {
+  const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (unlockVault(pin)) {
+    if (await unlockVault(pin)) {
       setPin("");
       setError("");
       setShow(false);

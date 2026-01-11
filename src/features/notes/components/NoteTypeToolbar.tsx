@@ -10,11 +10,26 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { useRouter, useSearchParams } from "next/navigation";
+
 export function NoteTypeToolbar({ folderId }: { folderId?: string }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const handleCreate = async (
     type: "general" | "secure" | "todo" | "reminder"
   ) => {
-    await createNote(folderId, type);
+    try {
+      const newNote = await createNote(folderId, type);
+      if (newNote) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("noteId", newNote.id);
+        router.push(`?${params.toString()}`);
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Failed to create note:", error);
+    }
   };
 
   return (

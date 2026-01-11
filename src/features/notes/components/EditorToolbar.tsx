@@ -12,6 +12,7 @@ import {
   Heading2,
   Heading3,
   Code,
+  SquareCode,
   Quote,
   Undo,
   Redo,
@@ -136,6 +137,18 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       <Button
         variant="ghost"
         size="icon"
+        onClick={() => editor.chain().focus().toggleCode().run()}
+        className={cn(
+          "h-8 w-8 text-muted-foreground hover:text-foreground",
+          editor.isActive("code") && "bg-muted text-foreground"
+        )}
+        title="Inline Code"
+      >
+        <Code className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         className={cn(
           "h-8 w-8 text-muted-foreground hover:text-foreground",
@@ -143,7 +156,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         )}
         title="Code Block"
       >
-        <Code className="h-4 w-4" />
+        <SquareCode className="h-4 w-4" />
       </Button>
 
       <div className="w-px h-5 bg-border mx-1" />

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Note, Folder } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -12,10 +12,11 @@ import {
   MoreVertical,
   Copy,
   FolderInput,
+  Trash2,
 } from "lucide-react";
 import { useVault } from "@/context/VaultContext";
 import { FolderNode, buildFolderTree } from "@/features/folders/utils";
-import { duplicateNote, moveNote } from "@/features/notes/actions";
+import { duplicateNote, moveNote, deleteNote } from "@/features/notes/actions";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,16 @@ import {
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface NoteListProps {
   notes: Note[];
@@ -38,6 +49,7 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isVaultLocked } = useVault();
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
 
   // Helper to render folder menu items recursively
   const renderFolderItems = (nodes: FolderNode[], noteId: string) => {
@@ -94,6 +106,25 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
     router.push(`?${params.toString()}`);
   };
 
+  const handleDeleteConfirm = async () => {
+    if (!noteToDelete) return;
+    try {
+      await deleteNote(noteToDelete);
+      setNoteToDelete(null);
+      router.refresh();
+      // If deleted note was selected, clear selection or move to inbox/first note?
+      // Router refresh might handle it if the notes list updates and the selected ID is no longer valid,
+      // but ideally we should redirect if the current note is deleted.
+      // However, for list item delete, we might not be *viewing* that note.
+      // If we ARE viewing it, we should probably redirect.
+      if (selectedNoteId === noteToDelete) {
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Failed to delete note:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col">
       {notes.length === 0 && (
@@ -107,7 +138,6 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
           onClick={() => handleNoteClick(note.id)}
           className={cn(
             "p-3 border-b border-border cursor-pointer hover:bg-muted/30 -mx-[1px] group",
-            // Removed overflow-hidden to help with popup positioning, ensuring children handle overflow
             selectedNoteId === note.id &&
               "bg-primary/5 border-l-4 border-l-primary border-y-transparent border-r-transparent"
           )}
@@ -143,7 +173,7 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
                 })}
               </span>
 
-              {/* 3-Dot Menu - Always visible, small */}
+              {/* 3-Dot Menu */}
               <div onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -187,6 +217,18 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
                         )}
                       </DropdownMenuSubContent>
                     </DropdownMenuSub>
+
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setNoteToDelete(note.id);
+                      }}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Delete</span>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -199,11 +241,40 @@ export function NoteList({ notes, selectedNoteId, folders }: NoteListProps) {
                 <Lock size={10} /> Content Encrypted
               </span>
             ) : (
-              note.content?.slice(0, 60) || "No content"
+              note.content
+                ?.replace(/<[^>]+>/g, " ") // Replace tags with space
+                .replace(/&nbsp;/g, " ") // Replace &nbsp; with space
+                .replace(/\s+/g, " ") // Collapse multiple spaces
+                .trim()
+                .slice(0, 60) || "No content"
             )}
           </div>
         </div>
       ))}
+
+      <AlertDialog
+        open={!!noteToDelete}
+        onOpenChange={(open) => !open && setNoteToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Note?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              note.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDeleteConfirm}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

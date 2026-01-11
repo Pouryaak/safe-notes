@@ -151,6 +151,48 @@
     cursor: pointer;
   }
 
+  /* Custom Circular Checkbox */
+  .prose ul[data-type="taskList"] li > label > input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.35em !important;
+    height: 1.35em !important;
+    border: 1.5px solid var(--muted-foreground);
+    border-radius: 50%;
+    margin: 0 !important;
+    cursor: pointer;
+    background-color: transparent;
+    display: grid;
+    place-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  /* Checked State */
+  .prose ul[data-type="taskList"] li > label > input[type="checkbox"]:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  /* Checkmark using clip-path on pseudo-element */
+  .prose ul[data-type="taskList"] li > label > input[type="checkbox"]::before {
+    content: "";
+    width: 0.75em;
+    height: 0.75em;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    background-color: var(--primary-foreground);
+    clip-path: polygon(20% 45%, 0% 60%, 40% 95%, 100% 20%, 80% 5%, 40% 65%);
+  }
+
+  .prose
+    ul[data-type="taskList"]
+    li
+    > label
+    > input[type="checkbox"]:checked::before {
+    transform: scale(1);
+  }
+
   /* Content wrapper */
   .prose ul[data-type="taskList"] li > div {
     flex: 1 1 auto !important;
@@ -162,7 +204,7 @@
     margin: 0 !important;
   }
 
-  /* Tiptap Code Block Styles */
+  /* Tiptap Code Block & Inline Code Styles */
   pre {
     background: var(--muted);
     border-radius: 0.5rem;
@@ -173,10 +215,30 @@
   }
 
   code {
-    background: none;
-    color: inherit;
+    background: var(--muted);
+    color: var(--foreground);
     font-size: 0.875rem;
+    padding: 0.2rem 0.3rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+  }
+
+  /* Disable backticks added by Tailwind Typography */
+  .prose code::before {
+    content: "" !important;
+    display: none !important;
+  }
+  .prose code::after {
+    content: "" !important;
+    display: none !important;
+  }
+
+  /* Ensure Code Block doesn't double pad (pre > code) */
+  .prose pre code {
+    background: transparent;
     padding: 0;
+    color: inherit;
+    font-size: inherit;
   }
 }
 

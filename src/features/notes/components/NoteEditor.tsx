@@ -112,70 +112,69 @@ export function NoteEditor({ note }: NoteEditorProps) {
   return (
     <div className="flex-1 h-full flex flex-col bg-background relative">
       {/* Meta Header */}
-      <div className="px-6 py-2 flex items-center justify-between bg-background border-b border-border/40">
-        <div className="flex items-center gap-2 text-muted-foreground/60 text-xs">
-          <span>{format(new Date(note.updated_at), "MMM d, h:mm a")}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-destructive transition-colors"
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Trash2 className="w-3 h-3" />
-                )}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Note?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete{" "}
-                  <span className="font-semibold">
-                    "{note.title || "Untitled"}"
-                  </span>
-                  ?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={async () => {
-                    if (!note) return;
-                    setIsDeleting(true);
-                    try {
-                      await deleteNote(note.id);
-                      router.replace("/");
-                      router.refresh();
-                    } catch (error) {
-                      setIsDeleting(false);
-                    }
-                  }}
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </div>
-
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Title Input area */}
-        <div className="max-w-3xl mx-auto w-full px-8 pt-6 pb-2">
+        {/* Title & Meta Area */}
+        <div className="max-w-3xl mx-auto w-full px-8 pt-6 pb-2 flex items-start justify-between gap-4">
           <input
-            className="w-full text-2xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/40 text-foreground"
+            className="flex-1 text-3xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/40 text-foreground min-w-0"
             placeholder="Untitled Note"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+
+          <div className="flex items-center gap-3 pt-2 shrink-0">
+            <span className="text-muted-foreground/60 text-xs text-nowrap">
+              {format(new Date(note.updated_at), "MMM d, h:mm a")}
+            </span>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive transition-colors"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3 h-3" />
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Note?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete{" "}
+                    <span className="font-semibold">
+                      "{note.title || "Untitled"}"
+                    </span>
+                    ?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={async () => {
+                      if (!note) return;
+                      setIsDeleting(true);
+                      try {
+                        await deleteNote(note.id);
+                        router.replace("/");
+                        router.refresh();
+                      } catch (error) {
+                        setIsDeleting(false);
+                      }
+                    }}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* Tiptap Editor (Includes Toolbar in it, or we pass sticky toolbar here?) 

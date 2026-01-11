@@ -1,4 +1,5 @@
 import { getNotes } from "@/features/notes/actions";
+import { getFolders } from "@/features/folders/actions";
 import { NoteList } from "@/features/notes/components/NoteList";
 import { NoteEditor } from "@/features/notes/components/NoteEditor";
 import { NoteTypeToolbar } from "@/features/notes/components/NoteTypeToolbar";
@@ -27,6 +28,7 @@ export default async function FolderPage({
 }) {
   const { id } = await params;
   const folder = await getFolder(id);
+  const folders = await getFolders();
 
   if (!folder) {
     notFound();
@@ -52,7 +54,7 @@ export default async function FolderPage({
           <SearchInput />
         </div>
         <ScrollArea className="flex-1">
-          <NoteList notes={notes} selectedNoteId={noteId} />
+          <NoteList notes={notes} selectedNoteId={noteId} folders={folders} />
         </ScrollArea>
         <NoteTypeToolbar folderId={folder.id} />
       </div>

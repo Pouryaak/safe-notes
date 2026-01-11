@@ -18,8 +18,8 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
   const unlockVault = (pin: string) => {
     // In a real app, verify PIN with server or hash
-    // For now, hardcoded "1234" to match existing behavior
-    if (pin === "1234") {
+    // For now, hardcoded "123456" for testing
+    if (pin === "123456") {
       setIsVaultLocked(false);
       return true;
     }

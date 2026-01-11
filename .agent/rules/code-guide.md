@@ -295,3 +295,5 @@ Example:
 
 If you can’t implement something confidently using official docs and safe patterns, **do not implement it**.
 Escalate with options and request clarification.
+
+Everytime after you make changes, go through all the files you touched, and make sure you haven't created any errors. This is very important, to check and fix them all before you say you are done.

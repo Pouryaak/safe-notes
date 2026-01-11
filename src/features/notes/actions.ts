@@ -7,7 +7,8 @@ import { encrypt, decrypt } from "@/lib/encryption";
 
 export async function getNotes(
   folderId?: string,
-  search?: string
+  search?: string,
+  includeAll: boolean = false
 ): Promise<Note[]> {
   const supabase = await createClient();
   let query = supabase
@@ -17,21 +18,15 @@ export async function getNotes(
 
   if (folderId) {
     query = query.eq("folder_id", folderId);
-  } else if (folderId === undefined && !search) {
-    // If folderId is explicitly undefined (Inbox) and no search
-    // But wait, if logic was: undefined = inbox?
-    // The original logic: if (folderId) else (inbox).
-    // Users might want "All Notes" search.
-    // For now, let's keep Inbox separation unless searching.
+  } else if (!includeAll && !search) {
+    // If not including all and no search, show Inbox (orphans)
     query = query.is("folder_id", null);
   }
+  // If includeAll is true, we don't apply any folder filter (unless folderId was passed, which overrides).
+  // search also applies globally if includeAll is true or folderId is missing.
 
   if (search) {
-    // If searching, we might want to search across all notes or just current context?
-    // User said "search through notes", implies global usually.
-    // If folderId is provided, scoped search.
-    query = query.ilike("title", `%${search}%`); // Basic search for now
-    // Or content? .or(`title.ilike.%${search}%,content.ilike.%${search}%`)
+    query = query.ilike("title", `%${search}%`);
   }
 
   const { data, error } = await query;
@@ -41,12 +36,52 @@ export async function getNotes(
     return [];
   }
 
-  // Mask secure content
+  // Decrypt content for secure notes
   return data.map((note) => ({
     ...note,
     content:
       note.type === "secure" ? decrypt(note.content || "") : note.content,
   }));
+}
+
+export async function duplicateNote(noteId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  // Fetch original
+  const { data: original, error: fetchError } = await supabase
+    .from("notes")
+    .select("*")
+    .eq("id", noteId)
+    .single();
+
+  if (fetchError || !original) throw new Error("Note not found");
+
+  // Create copy
+  const { error: insertError } = await supabase.from("notes").insert({
+    title: `${original.title} (Copy)`,
+    content: original.content, // Copy ciphertext directly or plain text
+    type: original.type,
+    user_id: user.id,
+    folder_id: original.folder_id,
+  });
+
+  if (insertError) throw new Error(insertError.message);
+  revalidatePath("/");
+}
+
+export async function moveNote(noteId: string, targetFolderId: string | null) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("notes")
+    .update({ folder_id: targetFolderId, updated_at: new Date().toISOString() })
+    .eq("id", noteId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
 }
 
 export async function createNote(

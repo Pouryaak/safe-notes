@@ -11,7 +11,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { useVault } from "@/context/VaultContext";
 import { Lock, Unlock } from "lucide-react";
 
@@ -43,7 +47,7 @@ export function VaultUnlockDialog({
       setError("");
       setShow(false);
     } else {
-      setError("Incorrect PIN. Default is '1234'.");
+      setError("Incorrect PIN. Default is '123456'.");
       setPin("");
     }
   };
@@ -60,7 +64,7 @@ export function VaultUnlockDialog({
       }}
     >
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="sm:max-w-xs">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-2">
             <Lock className="w-6 h-6 text-orange-600" />
@@ -71,17 +75,25 @@ export function VaultUnlockDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleUnlock} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Input
-              type="password"
-              placeholder="PIN"
+        <form
+          onSubmit={handleUnlock}
+          className="space-y-4 pt-2 flex flex-col items-center"
+        >
+          <div className="space-y-2 flex flex-col items-center">
+            <InputOTP
+              maxLength={6}
               value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              className="text-center tracking-[0.5em] font-mono text-lg"
-              autoFocus
-              maxLength={4}
-            />
+              onChange={(value) => setPin(value)}
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
             {error && (
               <p className="text-xs text-destructive text-center font-medium">
                 {error}

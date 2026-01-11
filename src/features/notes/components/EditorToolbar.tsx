@@ -30,7 +30,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 border-b border-border bg-background sticky top-0 z-10">
+    <div className="flex flex-wrap items-center gap-1 p-2 border-b border-border bg-background sticky top-0 z-10 overflow-x-auto no-scrollbar flex-nowrap md:flex-wrap">
       {/* History Group */}
       <div className="flex items-center gap-0.5 mr-2">
         <Button

@@ -144,6 +144,12 @@
     padding-left: 0 !important;
   }
 
+  .tiptap p {
+    margin: 0;
+    min-height: 1.5rem;
+    overflow-wrap: anywhere;
+  }
+
   /* Checkbox wrapper */
   .prose ul[data-type="taskList"] li > label {
     flex: 0 0 auto !important;
